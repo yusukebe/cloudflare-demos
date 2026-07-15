@@ -50,4 +50,18 @@
       "bucket_name": "cf-demos-site",
     },
   ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SESSION_DB",
+        "class_name": "SessionDB",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["SessionDB"],
+    },
+  ],
 }

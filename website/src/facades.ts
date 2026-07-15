@@ -1,6 +1,9 @@
-import { RpcTarget, WorkerEntrypoint } from 'cloudflare:workers'
+import { DurableObject, RpcTarget, WorkerEntrypoint } from 'cloudflare:workers'
 
 type Props = { prefix: string }
+type SessionProps = { sid: string }
+
+const SESSION_TTL_SECONDS = 7200
 
 export class KVFacade extends WorkerEntrypoint<Env, Props> {
   #key(key: string) {
@@ -12,7 +15,9 @@ export class KVFacade extends WorkerEntrypoint<Env, Props> {
   }
 
   async put(key: string, value: string, options?: { expirationTtl?: number }) {
-    await this.env.SITE_KV.put(this.#key(key), value, options)
+    await this.env.SITE_KV.put(this.#key(key), value, {
+      expirationTtl: options?.expirationTtl ?? SESSION_TTL_SECONDS,
+    })
   }
 
   async delete(key: string) {
@@ -26,34 +31,78 @@ export class KVFacade extends WorkerEntrypoint<Env, Props> {
   }
 }
 
-class StatementFacade extends RpcTarget {
-  #stmt: D1PreparedStatement
-
-  constructor(stmt: D1PreparedStatement) {
-    super()
-    this.#stmt = stmt
+export class SessionDB extends DurableObject<Env> {
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env)
+    ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`)
   }
 
-  bind(...values: unknown[]) {
-    return new StatementFacade(this.#stmt.bind(...values))
+  async #touch() {
+    if ((await this.ctx.storage.getAlarm()) === null) {
+      await this.ctx.storage.setAlarm(Date.now() + SESSION_TTL_SECONDS * 1000)
+    }
   }
 
-  all() {
-    return this.#stmt.all()
+  async all(sql: string, values: unknown[]) {
+    await this.#touch()
+    return { results: this.ctx.storage.sql.exec(sql, ...values).toArray() }
   }
 
-  first() {
-    return this.#stmt.first()
+  async first(sql: string, values: unknown[]) {
+    await this.#touch()
+    return this.ctx.storage.sql.exec(sql, ...values).toArray()[0] ?? null
   }
 
-  run() {
-    return this.#stmt.run()
+  async run(sql: string, values: unknown[]) {
+    await this.#touch()
+    this.ctx.storage.sql.exec(sql, ...values)
+    return { success: true }
+  }
+
+  async alarm() {
+    await this.ctx.storage.deleteAll()
   }
 }
 
-export class D1Facade extends WorkerEntrypoint<Env> {
+type SessionDBStub = ReturnType<Env['SESSION_DB']['getByName']>
+
+class StatementFacade extends RpcTarget {
+  #db: SessionDBStub
+  #sql: string
+  #values: unknown[]
+
+  constructor(db: SessionDBStub, sql: string, values: unknown[] = []) {
+    super()
+    this.#db = db
+    this.#sql = sql
+    this.#values = values
+  }
+
+  bind(...values: unknown[]) {
+    return new StatementFacade(this.#db, this.#sql, values)
+  }
+
+  all() {
+    return this.#db.all(this.#sql, this.#values)
+  }
+
+  first() {
+    return this.#db.first(this.#sql, this.#values)
+  }
+
+  run() {
+    return this.#db.run(this.#sql, this.#values)
+  }
+}
+
+export class D1Facade extends WorkerEntrypoint<Env, SessionProps> {
   prepare(sql: string) {
-    return new StatementFacade(this.env.SITE_DB.prepare(sql))
+    return new StatementFacade(this.env.SESSION_DB.getByName(this.ctx.props.sid), sql)
   }
 }
 

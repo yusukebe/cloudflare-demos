@@ -1,11 +1,14 @@
 import { Hono } from 'hono'
 import type { Context } from 'hono'
+import { getCookie, setCookie } from 'hono/cookie'
 import type { FC, PropsWithChildren } from 'hono/jsx'
 import { chapters } from './generated/chapters'
 
-export { D1Facade, KVFacade, R2Facade } from './facades'
+export { D1Facade, KVFacade, R2Facade, SessionDB } from './facades'
 
-const app = new Hono<{ Bindings: Env }>()
+type AppEnv = { Bindings: Env; Variables: { sid: string } }
+
+const app = new Hono<AppEnv>()
 
 const Layout: FC<PropsWithChildren<{ title?: string }>> = ({ title, children }) => (
   <html>
@@ -31,7 +34,7 @@ const Layout: FC<PropsWithChildren<{ title?: string }>> = ({ title, children }) 
         .badge { font-size: .75rem; background: #1f6feb33; color: #79c0ff;
                  border: 1px solid #1f6feb66; border-radius: 999px; padding: .05rem .6rem; }
         pre.shiki { padding: 1rem; border-radius: 8px; border: 1px solid #30363d;
-                    overflow-x: auto; font-size: .85rem; }
+                    overflow-x: auto; font-size: .85rem; background: #12181f !important; }
         .file { color: #8b949e; font-size: .8rem; margin: 1.5rem 0 .25rem; }
         @media (min-width: 1100px) {
           .cols:has(.tryit) { display: grid; grid-template-columns: minmax(0, 1fr) 420px;
@@ -128,7 +131,8 @@ app.get('/demos/:name', (c) => {
         </div>
         {chapter.bundle && (
           <div class='tryit'>
-            <strong>Try it</strong> — requests go to a Dynamic Worker running this code
+            <strong>Try it</strong> — requests go to a Dynamic Worker running this code. State is
+            isolated per browser session and expires after a while.
             <div class='presets' id='presets'></div>
             <form id='f'>
               <select name='method'>
@@ -198,23 +202,36 @@ app.get('/demos/:name', (c) => {
   )
 })
 
-const chapterEnv = (name: string, exports: Cloudflare.Exports) => {
+const chapterEnv = (name: string, exports: Cloudflare.Exports, sid: string) => {
   switch (name) {
     case 'kv':
-      return { KV: exports.KVFacade({ props: { prefix: 'demo:kv' } }) }
+      return { KV: exports.KVFacade({ props: { prefix: `sessions:${sid}:kv` } }) }
     case 'd1':
-      return { DB: exports.D1Facade({}) }
+      return { DB: exports.D1Facade({ props: { sid } }) }
     case 'r2':
-      return { BUCKET: exports.R2Facade({ props: { prefix: 'demo-r2' } }) }
+      return { BUCKET: exports.R2Facade({ props: { prefix: `sessions/${sid}/r2` } }) }
     default:
       return {}
   }
 }
 
+app.use('/run/*', async (c, next) => {
+  let sid = getCookie(c, 'sid')
+  const isNew = !sid
+  sid ??= crypto.randomUUID()
+  c.set('sid', sid)
+  await next()
+  if (isNew) {
+    // The dynamic worker's response has immutable headers — rewrap to set the cookie
+    c.res = new Response(c.res.body, c.res)
+    setCookie(c, 'sid', sid, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 7200 })
+  }
+})
+
 app.all('/run/:name/*', run)
 app.all('/run/:name', run)
 
-async function run(c: Context<{ Bindings: Env }>) {
+async function run(c: Context<AppEnv>) {
   const ip = c.req.header('cf-connecting-ip') ?? 'local'
   const { success } = await c.env.RUN_LIMITER.limit({ key: ip })
   if (!success) {
@@ -225,11 +242,12 @@ async function run(c: Context<{ Bindings: Env }>) {
   if (!chapter) {
     return c.notFound()
   }
-  const worker = c.env.LOADER.get(`${name}@${chapter.hash}`, async () => ({
+  const sid = c.get('sid')
+  const worker = c.env.LOADER.get(`${name}@${chapter.hash}@${sid}`, async () => ({
     compatibilityDate: '2026-07-01',
     mainModule: 'index.js',
     modules: { 'index.js': chapter.bundle! },
-    env: chapterEnv(name, c.executionCtx.exports),
+    env: chapterEnv(name, c.executionCtx.exports, sid),
     globalOutbound: null,
   }))
   const url = new URL(c.req.url)
