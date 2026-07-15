@@ -10,12 +10,29 @@ type AppEnv = { Bindings: Env; Variables: { sid: string } }
 
 const app = new Hono<AppEnv>()
 
-const Layout: FC<PropsWithChildren<{ title?: string }>> = ({ title, children }) => (
+const ORIGIN = 'https://cf-demos.yusuke.run'
+const DEFAULT_DESCRIPTION = 'Minimal Cloudflare product demos — run live in your browser'
+
+const Layout: FC<PropsWithChildren<{ title?: string; description?: string; path?: string }>> = ({
+  title,
+  description,
+  path,
+  children,
+}) => (
   <html>
     <head>
       <meta charset='utf-8' />
       <meta name='viewport' content='width=device-width, initial-scale=1' />
       <title>{title ? `${title} · cloudflare-demos` : 'cloudflare-demos'}</title>
+      <meta name='description' content={description ?? DEFAULT_DESCRIPTION} />
+      <link rel='icon' href='/favicon.svg' type='image/svg+xml' />
+      <meta property='og:title' content={title ?? 'cloudflare-demos'} />
+      <meta property='og:description' content={description ?? DEFAULT_DESCRIPTION} />
+      <meta property='og:url' content={`${ORIGIN}${path ?? '/'}`} />
+      <meta property='og:site_name' content='cloudflare-demos' />
+      <meta property='og:type' content='website' />
+      <meta property='og:image' content={`${ORIGIN}/og.png`} />
+      <meta name='twitter:card' content='summary_large_image' />
       <style>{`
         :root { color-scheme: dark; }
         * { box-sizing: border-box; }
@@ -110,7 +127,11 @@ app.get('/demos/:name', (c) => {
     return c.notFound()
   }
   return c.html(
-    <Layout title={chapter.name}>
+    <Layout
+      title={chapter.name}
+      description={`${chapter.product}: ${chapter.description}`}
+      path={`/demos/${chapter.name}`}
+    >
       <h1>
         {chapter.name} <span class='product'>{chapter.product}</span>
       </h1>
