@@ -28,7 +28,16 @@ const META = [
   ['flagship', 'Flagship', 'Feature flag evaluation with context'],
 ]
 
-const RUNNABLE = ['hello-hono', 'kv', 'd1', 'r2']
+const RUNNABLE = {
+  'hello-hono': 'index.ts',
+  kv: 'index.ts',
+  d1: 'index.ts',
+  r2: 'index.ts',
+  'workers-ai': 'index.ts',
+  vectorize: 'index.ts',
+  'service-bindings': 'gateway.ts',
+}
+const EXTRA_BUNDLE = { 'service-bindings': 'backend.ts' }
 
 const EXAMPLES = {
   'hello-hono': [
@@ -65,6 +74,40 @@ const EXAMPLES = {
     { label: 'list files', method: 'GET', path: '/files' },
     { label: 'delete hello.txt', method: 'DELETE', path: '/files/hello.txt' },
   ],
+  'workers-ai': [
+    {
+      label: 'say hi',
+      method: 'POST',
+      path: '/chat',
+      body: '{"prompt":"Say hi in exactly five words."}',
+    },
+    {
+      label: 'haiku',
+      method: 'POST',
+      path: '/chat',
+      body: '{"prompt":"Write a haiku about computing on the edge."}',
+    },
+  ],
+  vectorize: [
+    {
+      label: 'add note: ramen',
+      method: 'POST',
+      path: '/notes',
+      body: '{"id":"1","text":"I love ramen"}',
+    },
+    {
+      label: 'add note: workers',
+      method: 'POST',
+      path: '/notes',
+      body: '{"id":"2","text":"Cloudflare Workers is a serverless platform"}',
+    },
+    { label: 'search: noodle soup', method: 'GET', path: '/search?q=noodle+soup' },
+    { label: 'search: edge computing', method: 'GET', path: '/search?q=edge+computing' },
+  ],
+  'service-bindings': [
+    { label: 'add 2 + 3', method: 'GET', path: '/add/2/3' },
+    { label: 'greet', method: 'GET', path: '/greet/Yusuke' },
+  ],
 }
 
 const chapters = []
@@ -81,19 +124,41 @@ for (const [name, product, description] of META) {
   }
 
   let bundle
+  let backendBundle
   let hash
-  if (RUNNABLE.includes(name)) {
-    const result = await build({
-      entryPoints: [path.join(srcDir, 'index.ts')],
-      bundle: true,
-      format: 'esm',
-      write: false,
-    })
-    bundle = result.outputFiles[0].text
-    hash = createHash('sha256').update(bundle).digest('hex').slice(0, 8)
+  if (RUNNABLE[name]) {
+    bundle = await bundleFile(path.join(srcDir, RUNNABLE[name]))
+    if (EXTRA_BUNDLE[name]) {
+      backendBundle = await bundleFile(path.join(srcDir, EXTRA_BUNDLE[name]))
+    }
+    hash = createHash('sha256')
+      .update(bundle)
+      .update(backendBundle ?? '')
+      .digest('hex')
+      .slice(0, 8)
   }
 
-  chapters.push({ name, product, description, files, bundle, hash, examples: EXAMPLES[name] })
+  chapters.push({
+    name,
+    product,
+    description,
+    files,
+    bundle,
+    backendBundle,
+    hash,
+    examples: EXAMPLES[name],
+  })
+}
+
+async function bundleFile(file) {
+  const result = await build({
+    entryPoints: [file],
+    bundle: true,
+    format: 'esm',
+    write: false,
+    external: ['cloudflare:*'],
+  })
+  return result.outputFiles[0].text
 }
 
 await mkdir(outDir, { recursive: true })
@@ -108,10 +173,11 @@ export type Chapter = {
   description: string
   files: ChapterFile[]
   bundle?: string
+  backendBundle?: string
   hash?: string
   examples?: Example[]
 }
 export const chapters: Chapter[] = ${JSON.stringify(chapters, null, 2)}
 `
 )
-console.log(`generated ${chapters.length} chapters (${RUNNABLE.length} runnable)`)
+console.log(`generated ${chapters.length} chapters (${Object.keys(RUNNABLE).length} runnable)`)

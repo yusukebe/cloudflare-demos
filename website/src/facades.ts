@@ -1,4 +1,5 @@
 import { DurableObject, RpcTarget, WorkerEntrypoint } from 'cloudflare:workers'
+import { chapters } from './generated/chapters'
 
 type Props = { prefix: string }
 type SessionProps = { sid: string }
@@ -103,6 +104,74 @@ class StatementFacade extends RpcTarget {
 export class D1Facade extends WorkerEntrypoint<Env, SessionProps> {
   prepare(sql: string) {
     return new StatementFacade(this.env.SESSION_DB.getByName(this.ctx.props.sid), sql)
+  }
+}
+
+// Entrypoints of dynamically-loaded workers cannot be passed into another
+// worker's env, so this facade constructs the backend and forwards to it
+export class BackendFacade extends WorkerEntrypoint<Env, SessionProps> {
+  #backend() {
+    const chapter = chapters.find((ch) => ch.name === 'service-bindings')!
+    const worker = this.env.LOADER.get(
+      `service-bindings-backend@${chapter.hash}@${this.ctx.props.sid}`,
+      async () => ({
+        compatibilityDate: '2026-07-01',
+        mainModule: 'index.js',
+        modules: { 'index.js': chapter.backendBundle! },
+        env: {},
+        globalOutbound: null,
+      })
+    )
+    return worker.getEntrypoint() as unknown as {
+      add(a: number, b: number): Promise<number>
+      greet(name: string): Promise<string>
+    }
+  }
+
+  add(a: number, b: number) {
+    return this.#backend().add(a, b)
+  }
+
+  greet(name: string) {
+    return this.#backend().greet(name)
+  }
+}
+
+const ALLOWED_MODELS = new Set([
+  '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+  '@cf/baai/bge-base-en-v1.5',
+])
+const MAX_INPUT_CHARS = 500
+
+export class AIFacade extends WorkerEntrypoint<Env> {
+  async run(model: string, inputs: Record<string, unknown>) {
+    if (!ALLOWED_MODELS.has(model)) {
+      throw new Error(`model not allowed in this demo: ${model}`)
+    }
+    const texts = [inputs.prompt, ...(Array.isArray(inputs.text) ? inputs.text : [])]
+    for (const t of texts) {
+      if (typeof t === 'string' && t.length > MAX_INPUT_CHARS) {
+        throw new Error(`input too long (demo limit: ${MAX_INPUT_CHARS} chars)`)
+      }
+    }
+    // biome-ignore format: the model union is huge
+    return this.env.AI.run(model as keyof AiModels, { max_tokens: 256, ...inputs } as never)
+  }
+}
+
+export class VectorizeFacade extends WorkerEntrypoint<Env, SessionProps> {
+  async upsert(vectors: VectorizeVector[]) {
+    return this.env.INDEX.upsert(
+      vectors.slice(0, 20).map((v) => ({ ...v, namespace: this.ctx.props.sid }))
+    )
+  }
+
+  async query(values: number[], options?: VectorizeQueryOptions) {
+    return this.env.INDEX.query(values, {
+      ...options,
+      topK: Math.min(options?.topK ?? 3, 10),
+      namespace: this.ctx.props.sid,
+    })
   }
 }
 

@@ -32,6 +32,25 @@
         "period": 60,
       },
     },
+    {
+      "name": "AI_LIMITER",
+      "namespace_id": "2002",
+      "simple": {
+        "limit": 5,
+        "period": 60,
+      },
+    },
+  ],
+  "ai": {
+    "binding": "AI",
+    "remote": true,
+  },
+  "vectorize": [
+    {
+      "binding": "INDEX",
+      "index_name": "cf-demos-notes",
+      "remote": true,
+    },
   ],
   "kv_namespaces": [
     {

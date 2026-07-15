@@ -4,7 +4,15 @@ import { getCookie, setCookie } from 'hono/cookie'
 import type { FC, PropsWithChildren } from 'hono/jsx'
 import { chapters } from './generated/chapters'
 
-export { D1Facade, KVFacade, R2Facade, SessionDB } from './facades'
+export {
+  AIFacade,
+  BackendFacade,
+  D1Facade,
+  KVFacade,
+  R2Facade,
+  SessionDB,
+  VectorizeFacade,
+} from './facades'
 
 type AppEnv = { Bindings: Env; Variables: { sid: string } }
 
@@ -223,7 +231,8 @@ app.get('/demos/:name', (c) => {
   )
 })
 
-const chapterEnv = (name: string, exports: Cloudflare.Exports, sid: string) => {
+const chapterEnv = (c: Context<AppEnv>, name: string, sid: string) => {
+  const exports = c.executionCtx.exports
   switch (name) {
     case 'kv':
       return { KV: exports.KVFacade({ props: { prefix: `sessions:${sid}:kv` } }) }
@@ -231,10 +240,21 @@ const chapterEnv = (name: string, exports: Cloudflare.Exports, sid: string) => {
       return { DB: exports.D1Facade({ props: { sid } }) }
     case 'r2':
       return { BUCKET: exports.R2Facade({ props: { prefix: `sessions/${sid}/r2` } }) }
+    case 'workers-ai':
+      return { AI: exports.AIFacade({}) }
+    case 'vectorize':
+      return {
+        AI: exports.AIFacade({}),
+        INDEX: exports.VectorizeFacade({ props: { sid } }),
+      }
+    case 'service-bindings':
+      return { BACKEND: exports.BackendFacade({ props: { sid } }) }
     default:
       return {}
   }
 }
+
+const AI_CHAPTERS = new Set(['workers-ai', 'vectorize'])
 
 app.use('/run/*', async (c, next) => {
   let sid = getCookie(c, 'sid')
@@ -263,12 +283,18 @@ async function run(c: Context<AppEnv>) {
   if (!chapter) {
     return c.notFound()
   }
+  if (AI_CHAPTERS.has(name)) {
+    const { success } = await c.env.AI_LIMITER.limit({ key: ip })
+    if (!success) {
+      return c.text('Too Many Requests (AI demos are limited to 5 req/min)', 429)
+    }
+  }
   const sid = c.get('sid')
   const worker = c.env.LOADER.get(`${name}@${chapter.hash}@${sid}`, async () => ({
     compatibilityDate: '2026-07-01',
     mainModule: 'index.js',
     modules: { 'index.js': chapter.bundle! },
-    env: chapterEnv(name, c.executionCtx.exports, sid),
+    env: chapterEnv(c, name, sid),
     globalOutbound: null,
   }))
   const url = new URL(c.req.url)
