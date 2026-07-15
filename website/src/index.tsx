@@ -179,7 +179,6 @@ app.get('/demos/:name', (c) => {
                     form.method.value = ex.method
                     form.path.value = ex.path
                     form.body.value = ex.body ?? ''
-                    send()
                   })
                   presets.appendChild(b)
                 }`,
