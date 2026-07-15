@@ -138,7 +138,9 @@ right after deploy returned a transient 1104; fine afterwards.
 1. (on hold, per Yusuke 2026-07-16) Flagship live verify: after
    `wrangler login`, create app `cf-demos` + boolean flag `new-banner`, put
    app_id into demos/flagship/wrangler.jsonc. Code/tsc already done.
-2. website v2: mock/delegating facades (workers-ai, vectorize, flagship),
-   service-bindings live-run (load backend as a second dynamic worker),
-   DO facets spike for durable-objects; abuse protection before public deploy
-   (rate-limit the /run routes).
+2. (done 2026-07-16) website v2: workers-ai/vectorize live via delegating
+   facades (model allowlist, 500-char input cap, AI_LIMITER 5/min;
+   Vectorize namespaces = session isolation); service-bindings live via
+   BackendFacade — dynamic worker entrypoints cannot be passed into another
+   worker's env (DataCloneError), the parent must expose a forwarding
+   entrypoint. Remaining for v3: DO facets spike for durable-objects.
