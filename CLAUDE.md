@@ -1,8 +1,8 @@
 # cloudflare-demos
 
 A living collection of minimal Cloudflare product demos (Hono-based): one small
-runnable Worker per product, an integrated OIDC login app, and a Dynamic
-Workers-powered demo site that runs each demo live. Useful for workshops, blog
+runnable Worker per product, and a Dynamic Workers-powered demo site that
+runs each demo live. Useful for workshops, blog
 posts, customer conversations, and personal reference. Each demo shows the
 ordinary, minimal usage of its product — no scenario theming, minimal comments.
 
