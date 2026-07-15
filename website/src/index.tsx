@@ -24,7 +24,7 @@ const Layout: FC<PropsWithChildren<{ title?: string }>> = ({ title, children }) 
         a { color: #79c0ff; text-decoration: none; }
         a:hover { text-decoration: underline; }
         main { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
-        main:has(.tryit) { max-width: 1500px; }
+        main:has(.tryit) { max-width: none; padding-left: 2rem; padding-right: 2rem; }
         header { border-bottom: 1px solid #30363d; padding: 1rem; }
         header a { color: #e6edf3; font-weight: 600; }
         h1 { font-size: 1.5rem; }
