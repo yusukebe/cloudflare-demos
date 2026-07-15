@@ -21,6 +21,7 @@ const Layout: FC<PropsWithChildren<{ title?: string }>> = ({ title, children }) 
         a { color: #79c0ff; text-decoration: none; }
         a:hover { text-decoration: underline; }
         main { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+        main:has(.tryit) { max-width: 1500px; }
         header { border-bottom: 1px solid #30363d; padding: 1rem; }
         header a { color: #e6edf3; font-weight: 600; }
         h1 { font-size: 1.5rem; }
@@ -32,15 +33,29 @@ const Layout: FC<PropsWithChildren<{ title?: string }>> = ({ title, children }) 
         pre.shiki { padding: 1rem; border-radius: 8px; border: 1px solid #30363d;
                     overflow-x: auto; font-size: .85rem; }
         .file { color: #8b949e; font-size: .8rem; margin: 1.5rem 0 .25rem; }
-        .tryit { border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin-top: 2rem; }
-        .tryit form { display: flex; gap: .5rem; flex-wrap: wrap; }
+        @media (min-width: 1100px) {
+          .cols { display: grid; grid-template-columns: minmax(0, 1fr) 420px;
+                  gap: 1.5rem; align-items: start; }
+          .tryit { position: sticky; top: 1rem; margin-top: 1.5rem; }
+        }
+        .tryit { border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin-top: 2rem;
+                 background: #010409; }
+        .tryit form { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .75rem; }
+        .presets { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .75rem; }
         input, select, textarea, button { background: #161b22; color: #e6edf3;
           border: 1px solid #30363d; border-radius: 6px; padding: .4rem .6rem; font: inherit; }
-        input[name=path] { flex: 1; min-width: 12rem; }
-        textarea { width: 100%; margin-top: .5rem; font-family: ui-monospace, monospace; }
-        button { cursor: pointer; background: #238636; border-color: #2ea043; }
+        input[name=path] { flex: 1; min-width: 10rem; font-family: ui-monospace, monospace; }
+        textarea { width: 100%; font-family: ui-monospace, monospace; }
+        button { cursor: pointer; }
+        button[type=submit] { background: #238636; border-color: #2ea043; }
+        .presets button { background: #21262d; border-color: #30363d; font-size: .8rem;
+                          padding: .25rem .6rem; }
         pre#out { background: #161b22; border: 1px solid #30363d; border-radius: 6px;
-                  padding: .75rem; white-space: pre-wrap; word-break: break-all; }
+                  padding: .75rem; white-space: pre-wrap; word-break: break-all;
+                  font-size: .8rem; max-height: 24rem; overflow-y: auto; }
+        #status { font-family: ui-monospace, monospace; font-size: .8rem; margin-top: .75rem; }
+        #status.ok { color: #3fb950; }
+        #status.err { color: #f85149; }
       `}</style>
     </head>
     <body>
@@ -95,50 +110,84 @@ app.get('/demos/:name', (c) => {
           source on GitHub
         </a>
       </p>
-      {chapter.files.map((file) => (
+      <div class='cols'>
         <div>
-          <div class='file'>{file.name}</div>
-          <div dangerouslySetInnerHTML={{ __html: file.sourceHtml }} />
+          {chapter.files.map((file) => (
+            <div>
+              <div class='file'>{file.name}</div>
+              <div dangerouslySetInnerHTML={{ __html: file.sourceHtml }} />
+            </div>
+          ))}
         </div>
-      ))}
-      {chapter.bundle && (
-        <div class='tryit'>
-          <strong>Try it</strong> — requests go to a Dynamic Worker running the code above
-          <form id='f'>
-            <select name='method'>
-              <option>GET</option>
-              <option>POST</option>
-              <option>PUT</option>
-              <option>DELETE</option>
-            </select>
-            <input name='path' value='/' />
-            <button>Send</button>
-            <textarea name='body' rows={3} placeholder='request body (optional)'></textarea>
-          </form>
-          <pre id='out'>response will appear here</pre>
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-              document.getElementById('f').addEventListener('submit', async (e) => {
-                e.preventDefault()
-                const f = new FormData(e.target)
-                const out = document.getElementById('out')
-                out.textContent = '...'
-                try {
-                  const res = await fetch('/run/${chapter.name}' + f.get('path'), {
-                    method: f.get('method'),
-                    body: f.get('body') || undefined,
-                  })
-                  const text = await res.text()
-                  out.textContent = res.status + ' ' + res.statusText + '\\n' + text
-                } catch (err) {
-                  out.textContent = String(err)
+        {chapter.bundle && (
+          <div class='tryit'>
+            <strong>Try it</strong> — requests go to a Dynamic Worker running this code
+            <div class='presets' id='presets'></div>
+            <form id='f'>
+              <select name='method'>
+                <option>GET</option>
+                <option>POST</option>
+                <option>PUT</option>
+                <option>DELETE</option>
+              </select>
+              <input name='path' value='/' />
+              <button type='submit'>Send</button>
+              <textarea name='body' rows={3} placeholder='request body (optional)'></textarea>
+            </form>
+            <div id='status'></div>
+            <pre id='out'>response will appear here</pre>
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                const examples = ${JSON.stringify(chapter.examples ?? [])}
+                const form = document.getElementById('f')
+                const send = async () => {
+                  const f = new FormData(form)
+                  const status = document.getElementById('status')
+                  const out = document.getElementById('out')
+                  status.textContent = '...'
+                  status.className = ''
+                  try {
+                    const method = f.get('method')
+                    const body = method === 'GET' ? undefined : f.get('body') || undefined
+                    const headers = {}
+                    if (body) {
+                      try { JSON.parse(body); headers['content-type'] = 'application/json' }
+                      catch { headers['content-type'] = 'text/plain' }
+                    }
+                    const res = await fetch('/run/${chapter.name}' + f.get('path'), {
+                      method, headers, body,
+                    })
+                    let text = await res.text()
+                    try { text = JSON.stringify(JSON.parse(text), null, 2) } catch {}
+                    status.textContent = method + ' ' + f.get('path') + ' → ' +
+                      res.status + ' ' + res.statusText
+                    status.className = res.ok ? 'ok' : 'err'
+                    out.textContent = text || '(empty body)'
+                  } catch (err) {
+                    status.textContent = String(err)
+                    status.className = 'err'
+                  }
                 }
-              })`,
-            }}
-          />
-        </div>
-      )}
+                form.addEventListener('submit', (e) => { e.preventDefault(); send() })
+                const presets = document.getElementById('presets')
+                for (const ex of examples) {
+                  const b = document.createElement('button')
+                  b.type = 'button'
+                  b.textContent = ex.label
+                  b.addEventListener('click', () => {
+                    form.method.value = ex.method
+                    form.path.value = ex.path
+                    form.body.value = ex.body ?? ''
+                    send()
+                  })
+                  presets.appendChild(b)
+                }`,
+              }}
+            />
+          </div>
+        )}
+      </div>
     </Layout>
   )
 })
