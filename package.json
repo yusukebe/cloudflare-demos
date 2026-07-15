@@ -1,0 +1,13 @@
+{
+  "name": "cloudflare-demos",
+  "private": true,
+  "scripts": {
+    "format": "oxfmt ."
+  },
+  "devDependencies": {
+    "oxfmt": "latest",
+    "typescript": "^5",
+    "workers-fetch": "^0.0.3",
+    "wrangler": "^4"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "cf-demos-email",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+  },
+  // Add "remote": true to proxy local sends to the real service
+  "send_email": [
+    {
+      "name": "EMAIL",
+    },
+  ],
+}

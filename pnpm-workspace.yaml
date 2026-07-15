@@ -1,0 +1,15 @@
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
+
+packages:
+  - hello-hono
+  - kv
+  - d1
+  - durable-objects
+  - r2
+  - email
+  - flagship
+  - login-app
+  - site
