@@ -56,6 +56,8 @@ const Layout: FC<PropsWithChildren<{ title?: string }>> = ({ title, children }) 
         #status { font-family: ui-monospace, monospace; font-size: .8rem; margin-top: .75rem; }
         #status.ok { color: #3fb950; }
         #status.err { color: #f85149; }
+        footer { border-top: 1px solid #30363d; padding: 1.5rem 1rem; text-align: center;
+                 color: #8b949e; font-size: .85rem; }
       `}</style>
     </head>
     <body>
@@ -63,6 +65,11 @@ const Layout: FC<PropsWithChildren<{ title?: string }>> = ({ title, children }) 
         <a href='/'>cloudflare-demos</a>
       </header>
       <main>{children}</main>
+      <footer>
+        Built by <a href='https://github.com/yusukebe'>Yusuke Wada</a> ·{' '}
+        <a href='https://github.com/yusukebe/cloudflare-demos'>GitHub</a> ·{' '}
+        <a href='https://x.com/yusukebe'>X</a>
+      </footer>
     </body>
   </html>
 )
