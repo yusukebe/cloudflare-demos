@@ -30,7 +30,7 @@ cloudflare-demos/
 │   ├── static-assets/     public/ assets + Worker API route
 │   ├── service-bindings/  gateway → backend WorkerEntrypoint RPC (2 configs)
 │   ├── rate-limit/        per-key Rate Limiting binding
-│   ├── workers-ai/        LLM inference (llama-3.3-70b-instruct-fp8-fast, remote)
+│   ├── workers-ai/        LLM inference (llama-3.2-3b-instruct, remote)
 │   ├── vectorize/         semantic search (bge-base-en-v1.5 + cf-demos-notes index, remote)
 │   ├── browser-rendering/ Puppeteer screenshot (remote)
 │   ├── images/            IMAGES binding info/resize
@@ -114,7 +114,7 @@ config migrated from honojs/hono's .prettierrc) and seventeen chapters, all
 tsc-clean and runtime-verified locally except flagship (types/tsc only —
 live eval needs a real app_id; `wrangler flagship apps create` needs
 re-`wrangler login` for the flagship:write scope). Notes: workers-ai uses
-llama-3.3-70b-instruct-fp8-fast (3.1-8b was deprecated 2026-05-30); the
+llama-3.2-3b-instruct (3.1-8b was deprecated 2026-05-30); the
 Vectorize index cf-demos-notes (768 dims, cosine) exists on the account;
 Vectorize upserts take ~30s to become queryable; service-bindings runs two
 configs in one `wrangler dev` (-c -c). Pushed to

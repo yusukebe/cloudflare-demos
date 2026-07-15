@@ -137,10 +137,7 @@ export class BackendFacade extends WorkerEntrypoint<Env, SessionProps> {
   }
 }
 
-const ALLOWED_MODELS = new Set([
-  '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
-  '@cf/baai/bge-base-en-v1.5',
-])
+const ALLOWED_MODELS = new Set(['@cf/meta/llama-3.2-3b-instruct', '@cf/baai/bge-base-en-v1.5'])
 const MAX_INPUT_CHARS = 500
 
 export class AIFacade extends WorkerEntrypoint<Env> {
