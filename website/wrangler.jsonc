@@ -20,24 +20,34 @@
       "binding": "LOADER",
     },
   ],
+  "ratelimits": [
+    {
+      "name": "RUN_LIMITER",
+      "namespace_id": "2001",
+      "simple": {
+        "limit": 30,
+        "period": 60,
+      },
+    },
+  ],
   "kv_namespaces": [
     {
       "binding": "SITE_KV",
-      "id": "REPLACE_WITH_KV_NAMESPACE_ID",
+      "id": "94cd63ce19d54a8db9dfc56ed0408763",
     },
   ],
   "d1_databases": [
     {
       "binding": "SITE_DB",
-      "database_name": "cf-demos-website",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_name": "cf-demos-site",
+      "database_id": "bf2ad31b-a578-4139-a331-d4252e47c909",
       "migrations_dir": "migrations",
     },
   ],
   "r2_buckets": [
     {
       "binding": "SITE_BUCKET",
-      "bucket_name": "cf-demos-website",
+      "bucket_name": "cf-demos-site",
     },
   ],
 }

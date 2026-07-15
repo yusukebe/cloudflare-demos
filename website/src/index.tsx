@@ -215,6 +215,11 @@ app.all('/run/:name/*', run)
 app.all('/run/:name', run)
 
 async function run(c: Context<{ Bindings: Env }>) {
+  const ip = c.req.header('cf-connecting-ip') ?? 'local'
+  const { success } = await c.env.RUN_LIMITER.limit({ key: ip })
+  if (!success) {
+    return c.text('Too Many Requests', 429)
+  }
   const name = c.req.param('name') ?? ''
   const chapter = chapters.find((ch) => ch.name === name && ch.bundle)
   if (!chapter) {

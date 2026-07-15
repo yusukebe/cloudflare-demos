@@ -122,14 +122,16 @@ https://github.com/yusukebe/cloudflare-demos.
 
 ## Website v1 (2026-07-16)
 
-website/ built and verified locally: build script (esbuild bundles runnable
-chapters to ESM strings + shiki-highlighted sources → src/generated/, which
-is gitignored), hono/jsx SSR (list + code viewer + try-it panel), and
-`/run/:chapter/*` forwarding into Dynamic Workers with `globalOutbound: null`.
-Live-runnable: hello-hono, kv, d1, r2 via KVFacade/D1Facade/R2Facade against
-the website's own SITE_KV/SITE_DB/SITE_BUCKET. Deploy needs: real KV
-namespace id + D1 database id in website/wrangler.jsonc, R2 bucket
-`cf-demos-site`, remote migrations.
+website/ built, verified locally, and DEPLOYED as worker `cf-demos` to
+https://cf-demos.yusuke.run (custom domain only; workers_dev/preview_urls
+false). Build script (esbuild bundles runnable chapters to ESM strings +
+shiki-highlighted sources → src/generated/, gitignored), hono/jsx SSR
+(list + code viewer + sticky try-it panel with per-chapter preset requests),
+/run/:chapter/* forwards into Dynamic Workers (globalOutbound: null,
+RUN_LIMITER ratelimit 30 req/min per IP). Live: hello-hono, kv, d1, r2 via
+facades against SITE_KV (94cd63ce...), SITE_DB cf-demos-site (bf2ad31b...),
+SITE_BUCKET cf-demos-site. All verified in production. Note: first D1 query
+right after deploy returned a transient 1104; fine afterwards.
 
 ## Next steps
 
@@ -139,5 +141,3 @@ namespace id + D1 database id in website/wrangler.jsonc, R2 bucket
    service-bindings live-run (load backend as a second dynamic worker),
    DO facets spike for durable-objects; abuse protection before public deploy
    (rate-limit the /run routes).
-3. Deploy website as `cf-demos` → cf-demos.yusuke.run (create SITE_KV/SITE_DB/bucket, migrations,
-   `pnpm -F website deploy`).
