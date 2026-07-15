@@ -18,24 +18,25 @@ customer conversations over time.
 
 ```
 cloudflare-demos/
-├── hello-hono/        minimal Workers + Hono
-├── kv/                KV basics: get/put/delete/list + TTL
-├── d1/                migrations + posts table CRUD
-├── durable-objects/   per-name Counter (SQLite storage + RPC)
-├── r2/                minimal file upload/download
-├── queues/            producer + consumer in one Worker
-├── workflows/         durable steps + sleep (GreetingWorkflow)
-├── cron/              scheduled() handler, --test-scheduled
-├── static-assets/     public/ assets + Worker API route
-├── service-bindings/  gateway → backend WorkerEntrypoint RPC (2 configs)
-├── rate-limit/        per-key Rate Limiting binding
-├── workers-ai/        LLM inference (llama-3.3-70b-instruct-fp8-fast, remote)
-├── vectorize/         semantic search (bge-base-en-v1.5 + cf-demos-notes index, remote)
-├── browser-rendering/ Puppeteer screenshot (remote)
-├── images/            IMAGES binding info/resize
-├── email/             send a simple email via Email Service
-├── flagship/          boolean feature flag evaluation
-└── site/              demo site: shows each chapter's code, runs it live via Dynamic Workers
+├── demos/
+│   ├── hello-hono/        minimal Workers + Hono
+│   ├── kv/                KV basics: get/put/delete/list + TTL
+│   ├── d1/                migrations + posts table CRUD
+│   ├── durable-objects/   per-name Counter (SQLite storage + RPC)
+│   ├── r2/                minimal file upload/download
+│   ├── queues/            producer + consumer in one Worker
+│   ├── workflows/         durable steps + sleep (GreetingWorkflow)
+│   ├── cron/              scheduled() handler, --test-scheduled
+│   ├── static-assets/     public/ assets + Worker API route
+│   ├── service-bindings/  gateway → backend WorkerEntrypoint RPC (2 configs)
+│   ├── rate-limit/        per-key Rate Limiting binding
+│   ├── workers-ai/        LLM inference (llama-3.3-70b-instruct-fp8-fast, remote)
+│   ├── vectorize/         semantic search (bge-base-en-v1.5 + cf-demos-notes index, remote)
+│   ├── browser-rendering/ Puppeteer screenshot (remote)
+│   ├── images/            IMAGES binding info/resize
+│   ├── email/             send a simple email via Email Service
+│   └── flagship/          boolean feature flag evaluation
+└── site/                  demo site: shows each chapter's code, runs it live via Dynamic Workers
 ```
 
 pnpm workspaces at root (pnpm-workspace.yaml). Each chapter is an

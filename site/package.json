@@ -1,0 +1,17 @@
+{
+  "name": "site",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-chapters.mjs",
+    "dev": "pnpm build && wrangler dev",
+    "deploy": "pnpm build && wrangler deploy",
+    "types": "wrangler types"
+  },
+  "dependencies": {
+    "hono": "^4"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "shiki": "^3"
+  }
+}

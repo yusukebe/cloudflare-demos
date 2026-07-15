@@ -4,21 +4,5 @@ onlyBuiltDependencies:
   - workerd
 
 packages:
-  - hello-hono
-  - kv
-  - d1
-  - durable-objects
-  - r2
-  - email
-  - flagship
-  - queues
-  - workflows
-  - cron
-  - static-assets
-  - rate-limit
-  - service-bindings
-  - workers-ai
-  - vectorize
-  - browser-rendering
-  - images
+  - 'demos/*'
   - site

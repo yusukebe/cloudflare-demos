@@ -1,0 +1,16 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "cf-demos-flagship",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+  },
+  "flagship": [
+    {
+      "binding": "FLAGS",
+      "app_id": "REPLACE_WITH_FLAGSHIP_APP_ID",
+    },
+  ],
+}
