@@ -2,7 +2,8 @@
   "name": "cloudflare-demos",
   "private": true,
   "scripts": {
-    "format": "oxfmt ."
+    "format": "oxfmt .",
+    "types": "pnpm -r run types"
   },
   "devDependencies": {
     "oxfmt": "latest",

@@ -23,6 +23,16 @@ cloudflare-demos/
 ├── d1/                migrations + posts table CRUD
 ├── durable-objects/   per-name Counter (SQLite storage + RPC)
 ├── r2/                minimal file upload/download
+├── queues/            producer + consumer in one Worker
+├── workflows/         durable steps + sleep (GreetingWorkflow)
+├── cron/              scheduled() handler, --test-scheduled
+├── static-assets/     public/ assets + Worker API route
+├── service-bindings/  gateway → backend WorkerEntrypoint RPC (2 configs)
+├── rate-limit/        per-key Rate Limiting binding
+├── workers-ai/        LLM inference (llama-3.3-70b-instruct-fp8-fast, remote)
+├── vectorize/         semantic search (bge-base-en-v1.5 + cf-demos-notes index, remote)
+├── browser-rendering/ Puppeteer screenshot (remote)
+├── images/            IMAGES binding info/resize
 ├── email/             send a simple email via Email Service
 ├── flagship/          boolean feature flag evaluation
 └── site/              demo site: shows each chapter's code, runs it live via Dynamic Workers
@@ -93,11 +103,14 @@ context)` etc.; context like `{ userId }` for percentage rollouts (sticky
 ## Status (2026-07-16)
 
 Done: scaffold (pnpm workspaces + pnpm-workspace.yaml, tsconfig.base, oxfmt
-config migrated from honojs/hono's .prettierrc) and the seven basic chapters
-(hello-hono, kv, d1, durable-objects, r2, email, flagship), each verified
-locally (flagship: types/tsc only — live eval needs a real app_id, and
-creating one via `wrangler flagship apps create` requires re-`wrangler login`
-for the flagship:write scope). Pushed to
+config migrated from honojs/hono's .prettierrc) and seventeen chapters, all
+tsc-clean and runtime-verified locally except flagship (types/tsc only —
+live eval needs a real app_id; `wrangler flagship apps create` needs
+re-`wrangler login` for the flagship:write scope). Notes: workers-ai uses
+llama-3.3-70b-instruct-fp8-fast (3.1-8b was deprecated 2026-05-30); the
+Vectorize index cf-demos-notes (768 dims, cosine) exists on the account;
+Vectorize upserts take ~30s to become queryable; service-bindings runs two
+configs in one `wrangler dev` (-c -c). Pushed to
 https://github.com/yusukebe/cloudflare-demos.
 
 ## Next steps

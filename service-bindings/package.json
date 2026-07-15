@@ -1,0 +1,12 @@
+{
+  "name": "service-bindings",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev -c wrangler.jsonc -c backend.wrangler.jsonc",
+    "deploy": "wrangler deploy -c backend.wrangler.jsonc && wrangler deploy",
+    "types": "wrangler types -c wrangler.jsonc -c backend.wrangler.jsonc"
+  },
+  "dependencies": {
+    "hono": "^4"
+  }
+}

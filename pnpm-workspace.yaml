@@ -11,4 +11,14 @@ packages:
   - r2
   - email
   - flagship
+  - queues
+  - workflows
+  - cron
+  - static-assets
+  - rate-limit
+  - service-bindings
+  - workers-ai
+  - vectorize
+  - browser-rendering
+  - images
   - site
