@@ -1,0 +1,35 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "cf-demos-website",
+  "main": "src/index.tsx",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+  },
+  "worker_loaders": [
+    {
+      "binding": "LOADER",
+    },
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "SITE_KV",
+      "id": "REPLACE_WITH_KV_NAMESPACE_ID",
+    },
+  ],
+  "d1_databases": [
+    {
+      "binding": "SITE_DB",
+      "database_name": "cf-demos-website",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "SITE_BUCKET",
+      "bucket_name": "cf-demos-website",
+    },
+  ],
+}

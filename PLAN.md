@@ -36,7 +36,7 @@ cloudflare-demos/
 │   ├── images/            IMAGES binding info/resize
 │   ├── email/             send a simple email via Email Service
 │   └── flagship/          boolean feature flag evaluation
-└── site/                  demo site: shows each chapter's code, runs it live via Dynamic Workers
+└── website/           demo site: shows each chapter's code, runs it live via Dynamic Workers
 ```
 
 pnpm workspaces at root (pnpm-workspace.yaml). Each chapter is an
@@ -44,7 +44,7 @@ independent minimal Worker (`wrangler dev` runnable). Conventions: code
 comments/README in English; format with oxfmt (hono rules); verify Workers
 locally with the `workers-fetch` skill (single-shot request, no dev server).
 
-## Dynamic Workers findings (for site/)
+## Dynamic Workers findings (for website/)
 
 - Open beta, all **paid** Workers plans. Binding `env.LOADER.load()/get()`;
   `get(id)` caches isolates by id, `load()` is always fresh.
@@ -59,10 +59,16 @@ locally with the `workers-fetch` skill (single-shot request, no dev server).
 - DO classes inside dynamic workers: unclear in docs; Agents Week 2026
   announced "Durable Objects in Dynamic Workers (GA)" — verify; fallback is a
   host-side DO behind a facade.
-- Per-chapter live-run feasibility: hello-hono/kv/d1/r2 ○ (facade bindings);
-  durable-objects to verify; email/flagship via mock stubs.
+- Per-chapter live-run feasibility: hello-hono/kv/d1/r2 ○ (facade bindings,
+  all verified locally); durable-objects needs DO facets (supervisor DO);
+  workers-ai/vectorize/flagship could delegate to the website's real bindings
+  (v2, needs abuse protection); workflows/queues/cron/email/etc. code-view only.
+- Verified empirically (2026-07): worker_loaders works in local `wrangler dev`;
+  ctx.exports facades + RpcTarget chaining (D1 prepare/bind) work over RPC;
+  ReadableStream works over RPC for R2 get, but R2 put needs buffering in the
+  facade (streams lose their known length over RPC).
 - Docs: https://developers.cloudflare.com/dynamic-workers/ (api-reference,
-  usage/bindings).
+  usage/bindings, durable-object-facets).
 
 ## Email Service (checked 2026-07)
 
@@ -114,9 +120,24 @@ Vectorize upserts take ~30s to become queryable; service-bindings runs two
 configs in one `wrangler dev` (-c -c). Pushed to
 https://github.com/yusukebe/cloudflare-demos.
 
+## Website v1 (2026-07-16)
+
+website/ built and verified locally: build script (esbuild bundles runnable
+chapters to ESM strings + shiki-highlighted sources → src/generated/, which
+is gitignored), hono/jsx SSR (list + code viewer + try-it panel), and
+`/run/:chapter/*` forwarding into Dynamic Workers with `globalOutbound: null`.
+Live-runnable: hello-hono, kv, d1, r2 via KVFacade/D1Facade/R2Facade against
+the website's own SITE_KV/SITE_DB/SITE_BUCKET. Deploy needs: real KV
+namespace id + D1 database id in website/wrangler.jsonc, R2 bucket
+`cf-demos-site`, remote migrations.
+
 ## Next steps
 
 1. Flagship: after `wrangler login`, create app `cf-demos` + boolean flag
-   `new-banner`, put app_id into flagship/wrangler.jsonc, verify live.
-2. site/: esbuild bundling of chapters, LOADER binding, facade bindings,
-   code viewer + live run. Verify DO-in-dynamic-worker en route.
+   `new-banner`, put app_id into demos/flagship/wrangler.jsonc, verify live.
+2. website v2: mock/delegating facades (workers-ai, vectorize, flagship),
+   service-bindings live-run (load backend as a second dynamic worker),
+   DO facets spike for durable-objects; abuse protection before public deploy
+   (rate-limit the /run routes).
+3. Deploy website to the account (create SITE_KV/SITE_DB/bucket, migrations,
+   `pnpm -F website deploy`).

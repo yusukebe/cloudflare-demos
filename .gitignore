@@ -5,3 +5,4 @@ dist/
 worker-configuration.d.ts
 .DS_Store
 pnpm-lock.yaml
+website/src/generated/
