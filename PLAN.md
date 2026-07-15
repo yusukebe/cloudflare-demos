@@ -139,5 +139,5 @@ namespace id + D1 database id in website/wrangler.jsonc, R2 bucket
    service-bindings live-run (load backend as a second dynamic worker),
    DO facets spike for durable-objects; abuse protection before public deploy
    (rate-limit the /run routes).
-3. Deploy website to the account (create SITE_KV/SITE_DB/bucket, migrations,
+3. Deploy website as `cf-demos` → cf-demos.yusuke.run (create SITE_KV/SITE_DB/bucket, migrations,
    `pnpm -F website deploy`).

@@ -1,9 +1,15 @@
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
-  "name": "cf-demos-website",
+  "name": "cf-demos",
   "main": "src/index.tsx",
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    {
+      "pattern": "cf-demos.yusuke.run",
+      "custom_domain": true,
+    },
+  ],
   "observability": {
     "enabled": true,
   },
