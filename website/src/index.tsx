@@ -34,8 +34,8 @@ const Layout: FC<PropsWithChildren<{ title?: string }>> = ({ title, children }) 
                     overflow-x: auto; font-size: .85rem; }
         .file { color: #8b949e; font-size: .8rem; margin: 1.5rem 0 .25rem; }
         @media (min-width: 1100px) {
-          .cols { display: grid; grid-template-columns: minmax(0, 1fr) 420px;
-                  gap: 1.5rem; align-items: start; }
+          .cols:has(.tryit) { display: grid; grid-template-columns: minmax(0, 1fr) 420px;
+                              gap: 1.5rem; align-items: start; }
           .tryit { position: sticky; top: 1rem; margin-top: 1.5rem; }
         }
         .tryit { border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin-top: 2rem;
