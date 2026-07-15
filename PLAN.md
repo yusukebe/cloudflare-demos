@@ -144,3 +144,9 @@ right after deploy returned a transient 1104; fine afterwards.
    BackendFacade — dynamic worker entrypoints cannot be passed into another
    worker's env (DataCloneError), the parent must expose a forwarding
    entrypoint. Remaining for v3: DO facets spike for durable-objects.
+3. (done 2026-07-16) rate-limit + images live (RateLimitFacade with
+   session-scoped keys; ImagesFacade rebuilds the input/transform/output
+   chain — buffer over RPC, rewrap as fixed-length stream). Try-it panel
+   gained file upload, binary presets (bodyUrl), and inline image rendering.
+   Home page has a How it works section; repo README links the site with a
+   screenshot.

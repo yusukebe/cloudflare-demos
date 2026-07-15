@@ -172,6 +172,65 @@ export class VectorizeFacade extends WorkerEntrypoint<Env, SessionProps> {
   }
 }
 
+export class RateLimitFacade extends WorkerEntrypoint<Env, SessionProps> {
+  limit({ key }: { key: string }) {
+    return this.env.DEMO_LIMITER.limit({ key: `${this.ctx.props.sid}:${key}` })
+  }
+}
+
+class ImageResult extends RpcTarget {
+  #result: ImageTransformationResult
+
+  constructor(result: ImageTransformationResult) {
+    super()
+    this.#result = result
+  }
+
+  response() {
+    return this.#result.response()
+  }
+
+  contentType() {
+    return this.#result.contentType()
+  }
+}
+
+class ImageChain extends RpcTarget {
+  #env: Env
+  #data: Promise<ArrayBuffer>
+  #transforms: ImageTransform[]
+
+  constructor(env: Env, data: Promise<ArrayBuffer>, transforms: ImageTransform[] = []) {
+    super()
+    this.#env = env
+    this.#data = data
+    this.#transforms = transforms
+  }
+
+  transform(t: ImageTransform) {
+    return new ImageChain(this.#env, this.#data, [...this.#transforms, t])
+  }
+
+  async output(options: ImageOutputOptions) {
+    let builder = this.#env.IMAGES.input(new Response(await this.#data).body!)
+    for (const t of this.#transforms) {
+      builder = builder.transform(t)
+    }
+    return new ImageResult(await builder.output(options))
+  }
+}
+
+export class ImagesFacade extends WorkerEntrypoint<Env> {
+  async info(stream: ReadableStream) {
+    const data = await new Response(stream).arrayBuffer()
+    return this.env.IMAGES.info(new Response(data).body!)
+  }
+
+  input(stream: ReadableStream) {
+    return new ImageChain(this.env, new Response(stream).arrayBuffer())
+  }
+}
+
 export class R2Facade extends WorkerEntrypoint<Env, Props> {
   #key(key: string) {
     return `${this.ctx.props.prefix}/${key}`

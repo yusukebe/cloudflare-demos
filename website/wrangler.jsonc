@@ -40,7 +40,18 @@
         "period": 60,
       },
     },
+    {
+      "name": "DEMO_LIMITER",
+      "namespace_id": "2003",
+      "simple": {
+        "limit": 5,
+        "period": 60,
+      },
+    },
   ],
+  "images": {
+    "binding": "IMAGES",
+  },
   "ai": {
     "binding": "AI",
     "remote": true,

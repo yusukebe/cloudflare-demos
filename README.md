@@ -3,6 +3,13 @@
 Minimal Cloudflare product demos — one small [Hono](https://hono.dev)-based
 Worker per product.
 
+**▶ Live site: https://cf-demos.yusuke.run** — browse every chapter's code,
+and run nine of them right in your browser. Each live chapter executes in a
+sandboxed [Dynamic Worker](https://developers.cloudflare.com/dynamic-workers/)
+with capability-based bindings, fully isolated per session.
+
+[![cf-demos.yusuke.run](.github/screenshot.png)](https://cf-demos.yusuke.run)
+
 | Chapter                                        | Product           | What it shows                           |
 | ---------------------------------------------- | ----------------- | --------------------------------------- |
 | [hello-hono](./demos/hello-hono)               | Workers           | Smallest Worker + `request.cf` metadata |

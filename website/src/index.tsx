@@ -8,8 +8,10 @@ export {
   AIFacade,
   BackendFacade,
   D1Facade,
+  ImagesFacade,
   KVFacade,
   R2Facade,
+  RateLimitFacade,
   SessionDB,
   VectorizeFacade,
 } from './facades'
@@ -84,6 +86,12 @@ const Layout: FC<PropsWithChildren<{ title?: string; description?: string; path?
         #status { font-family: ui-monospace, monospace; font-size: .8rem; margin-top: .75rem; }
         #status.ok { color: #3fb950; }
         #status.err { color: #f85149; }
+        #outimg { display: none; max-width: 100%; margin-top: .5rem; border-radius: 6px;
+                  border: 1px solid #30363d; }
+        input[type=file] { width: 100%; font-size: .8rem; color: #8b949e; }
+        .how { margin-top: 3rem; color: #c9d1d9; }
+        .how h2 { font-size: 1.1rem; }
+        .how li { margin: .4rem 0; }
         footer { border-top: 1px solid #30363d; padding: 1.5rem 1rem; text-align: center;
                  color: #8b949e; font-size: .85rem; }
       `}</style>
@@ -125,6 +133,31 @@ app.get('/', (c) =>
           ))}
         </tbody>
       </table>
+      <div class='how'>
+        <h2>How it works</h2>
+        <ul>
+          <li>
+            Each demo is a tiny <a href='https://hono.dev'>Hono</a> Worker showing the ordinary,
+            minimal usage of one product — source in{' '}
+            <a href='https://github.com/yusukebe/cloudflare-demos'>the repo</a>.
+          </li>
+          <li>
+            Live chapters are bundled with esbuild at build time and loaded on demand into a{' '}
+            <a href='https://developers.cloudflare.com/dynamic-workers/'>Dynamic Worker</a> with{' '}
+            <code>globalOutbound: null</code>, so demo code has no network access.
+          </li>
+          <li>
+            Bindings are capability-based facades passed via <code>ctx.exports</code>: the demo code
+            is unchanged, but its KV / D1 / R2 / AI calls are forwarded to session-scoped resources.
+            Each visitor gets their own isolate, KV/R2 prefix, Vectorize namespace — and a
+            SQLite-backed Durable Object standing in for D1.
+          </li>
+          <li>
+            Everything cleans itself up: KV TTLs, Durable Object alarms, and an R2 lifecycle rule
+            expire each session's data.
+          </li>
+        </ul>
+      </div>
     </Layout>
   )
 )
@@ -173,43 +206,66 @@ app.get('/demos/:name', (c) => {
               <input name='path' value='/' />
               <button type='submit'>Send</button>
               <textarea name='body' rows={3} placeholder='request body (optional)'></textarea>
+              <input type='file' name='file' />
             </form>
             <div id='status'></div>
             <pre id='out'>response will appear here</pre>
+            <img id='outimg' alt='response' />
             <script
               dangerouslySetInnerHTML={{
                 __html: `
                 const examples = ${JSON.stringify(chapter.examples ?? [])}
                 const form = document.getElementById('f')
+                let bodyUrl = null
                 const send = async () => {
                   const f = new FormData(form)
                   const status = document.getElementById('status')
                   const out = document.getElementById('out')
+                  const img = document.getElementById('outimg')
                   status.textContent = '...'
                   status.className = ''
+                  img.style.display = 'none'
                   try {
                     const method = f.get('method')
-                    const body = method === 'GET' ? undefined : f.get('body') || undefined
                     const headers = {}
-                    if (body) {
-                      try { JSON.parse(body); headers['content-type'] = 'application/json' }
-                      catch { headers['content-type'] = 'text/plain' }
+                    let body
+                    if (method !== 'GET') {
+                      const file = form.file.files[0]
+                      if (file) {
+                        body = file
+                      } else if (bodyUrl) {
+                        body = await (await fetch(bodyUrl)).blob()
+                      } else if (f.get('body')) {
+                        body = f.get('body')
+                        try { JSON.parse(body); headers['content-type'] = 'application/json' }
+                        catch { headers['content-type'] = 'text/plain' }
+                      }
                     }
                     const res = await fetch('/run/${chapter.name}' + f.get('path'), {
                       method, headers, body,
                     })
-                    let text = await res.text()
-                    try { text = JSON.stringify(JSON.parse(text), null, 2) } catch {}
                     status.textContent = method + ' ' + f.get('path') + ' → ' +
                       res.status + ' ' + res.statusText
                     status.className = res.ok ? 'ok' : 'err'
-                    out.textContent = text || '(empty body)'
+                    const ct = res.headers.get('content-type') || ''
+                    if (ct.startsWith('image/')) {
+                      const blob = await res.blob()
+                      img.src = URL.createObjectURL(blob)
+                      img.style.display = 'block'
+                      out.textContent = '(' + ct + ', ' + blob.size + ' bytes)'
+                    } else {
+                      let text = await res.text()
+                      try { text = JSON.stringify(JSON.parse(text), null, 2) } catch {}
+                      out.textContent = text || '(empty body)'
+                    }
                   } catch (err) {
                     status.textContent = String(err)
                     status.className = 'err'
                   }
                 }
                 form.addEventListener('submit', (e) => { e.preventDefault(); send() })
+                form.body.addEventListener('input', () => { bodyUrl = null })
+                form.file.addEventListener('change', () => { bodyUrl = null })
                 const presets = document.getElementById('presets')
                 for (const ex of examples) {
                   const b = document.createElement('button')
@@ -218,7 +274,9 @@ app.get('/demos/:name', (c) => {
                   b.addEventListener('click', () => {
                     form.method.value = ex.method
                     form.path.value = ex.path
-                    form.body.value = ex.body ?? ''
+                    form.body.value = ex.body ?? (ex.bodyUrl ? '(binary body: ' + ex.bodyUrl + ')' : '')
+                    bodyUrl = ex.bodyUrl ?? null
+                    form.file.value = ''
                   })
                   presets.appendChild(b)
                 }`,
@@ -249,6 +307,10 @@ const chapterEnv = (c: Context<AppEnv>, name: string, sid: string) => {
       }
     case 'service-bindings':
       return { BACKEND: exports.BackendFacade({ props: { sid } }) }
+    case 'rate-limit':
+      return { RATE_LIMITER: exports.RateLimitFacade({ props: { sid } }) }
+    case 'images':
+      return { IMAGES: exports.ImagesFacade({}) }
     default:
       return {}
   }
