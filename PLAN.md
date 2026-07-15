@@ -135,8 +135,9 @@ right after deploy returned a transient 1104; fine afterwards.
 
 ## Next steps
 
-1. Flagship: after `wrangler login`, create app `cf-demos` + boolean flag
-   `new-banner`, put app_id into demos/flagship/wrangler.jsonc, verify live.
+1. (on hold, per Yusuke 2026-07-16) Flagship live verify: after
+   `wrangler login`, create app `cf-demos` + boolean flag `new-banner`, put
+   app_id into demos/flagship/wrangler.jsonc. Code/tsc already done.
 2. website v2: mock/delegating facades (workers-ai, vectorize, flagship),
    service-bindings live-run (load backend as a second dynamic worker),
    DO facets spike for durable-objects; abuse protection before public deploy
