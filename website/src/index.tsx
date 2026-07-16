@@ -25,12 +25,20 @@ const app = new Hono<AppEnv>()
 const ORIGIN = 'https://cf-demos.yusuke.run'
 const DEFAULT_DESCRIPTION = 'Minimal Cloudflare product demos — run live in your browser'
 
-const Layout: FC<PropsWithChildren<{ title?: string; description?: string; path?: string }>> = ({
-  title,
-  description,
-  path,
-  children,
-}) => (
+const ShareOnX: FC<{ text: string; path: string }> = ({ text, path }) => (
+  <a
+    class='share'
+    href={`https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(ORIGIN + path)}`}
+    target='_blank'
+    rel='noreferrer'
+  >
+    𝕏 Share
+  </a>
+)
+
+const Layout: FC<
+  PropsWithChildren<{ title?: string; description?: string; path?: string; ogImage?: string }>
+> = ({ title, description, path, ogImage, children }) => (
   <html>
     <head>
       <meta charset='utf-8' />
@@ -43,7 +51,7 @@ const Layout: FC<PropsWithChildren<{ title?: string; description?: string; path?
       <meta property='og:url' content={`${ORIGIN}${path ?? '/'}`} />
       <meta property='og:site_name' content='cloudflare-demos' />
       <meta property='og:type' content='website' />
-      <meta property='og:image' content={`${ORIGIN}/og.png`} />
+      <meta property='og:image' content={`${ORIGIN}${ogImage ?? '/og.png'}`} />
       <meta name='twitter:card' content='summary_large_image' />
       <style>{`
         :root { color-scheme: dark; }
@@ -82,6 +90,10 @@ const Layout: FC<PropsWithChildren<{ title?: string; description?: string; path?
         button[type=submit] { background: #238636; border-color: #2ea043; }
         .presets button { background: #21262d; border-color: #30363d; font-size: .8rem;
                           padding: .25rem .6rem; }
+        a.share { display: inline-block; background: #21262d; border: 1px solid #30363d;
+                  border-radius: 6px; padding: .15rem .6rem; font-size: .8rem;
+                  color: #e6edf3; }
+        a.share:hover { text-decoration: none; border-color: #8b949e; }
         pre#out { background: #161b22; border: 1px solid #30363d; border-radius: 6px;
                   padding: .75rem; white-space: pre-wrap; word-break: break-all;
                   font-size: .8rem; max-height: 24rem; overflow-y: auto; }
@@ -119,7 +131,11 @@ app.get('/', (c) =>
       <p>
         One small <a href='https://hono.dev'>Hono</a>-based Worker per product. Chapters marked
         <span class='badge'>live</span> run in a sandboxed{' '}
-        <a href='https://developers.cloudflare.com/dynamic-workers/'>Dynamic Worker</a>.
+        <a href='https://developers.cloudflare.com/dynamic-workers/'>Dynamic Worker</a>.{' '}
+        <ShareOnX
+          text='cloudflare-demos — minimal Cloudflare product demos, running live in sandboxed Dynamic Workers'
+          path='/'
+        />
       </p>
       <table>
         <tbody>
@@ -174,6 +190,7 @@ app.get('/demos/:name', (c) => {
       title={chapter.name}
       description={`${chapter.product}: ${chapter.description}`}
       path={`/demos/${chapter.name}`}
+      ogImage={`/og/${chapter.name}.png`}
     >
       <h1>
         {chapter.name} <span class='product'>{chapter.product}</span>
@@ -182,7 +199,11 @@ app.get('/demos/:name', (c) => {
         {chapter.description} —{' '}
         <a href={`https://github.com/yusukebe/cloudflare-demos/tree/main/demos/${chapter.name}`}>
           source on GitHub
-        </a>
+        </a>{' '}
+        <ShareOnX
+          text={`${chapter.name} — a minimal Cloudflare ${chapter.product} demo, running live in a sandboxed Dynamic Worker`}
+          path={`/demos/${chapter.name}`}
+        />
       </p>
       <div class='cols'>
         <div>
