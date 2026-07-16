@@ -172,6 +172,72 @@ export class VectorizeFacade extends WorkerEntrypoint<Env, SessionProps> {
   }
 }
 
+// Runs the chapter's Counter DO class as a facet (child) of this supervisor
+// DO — the dynamic code gets its own SQLite database, not the supervisor's
+export class FacetHost extends DurableObject<Env> {
+  async #touch() {
+    if ((await this.ctx.storage.getAlarm()) === null) {
+      await this.ctx.storage.setAlarm(Date.now() + SESSION_TTL_SECONDS * 1000)
+    }
+  }
+
+  async callCounter(name: string, method: 'get' | 'increment', args: unknown[]) {
+    await this.#touch()
+    const facetName = `counter:${name}`
+    const names = (await this.ctx.storage.get<string[]>('facets')) ?? []
+    if (!names.includes(facetName)) {
+      await this.ctx.storage.put('facets', [...names, facetName])
+    }
+    const chapter = chapters.find((ch) => ch.name === 'durable-objects')!
+    const facet = this.ctx.facets.get(facetName, async () => {
+      const worker = this.env.LOADER.get(`durable-objects-class@${chapter.hash}`, async () => ({
+        compatibilityDate: '2026-07-01',
+        mainModule: 'index.js',
+        modules: { 'index.js': chapter.bundle! },
+        globalOutbound: null,
+      }))
+      return { class: worker.getDurableObjectClass('Counter') }
+    })
+    return (facet as unknown as Record<typeof method, (...a: unknown[]) => unknown>)[method](
+      ...args
+    )
+  }
+
+  async alarm() {
+    for (const name of (await this.ctx.storage.get<string[]>('facets')) ?? []) {
+      await this.ctx.facets.delete(name)
+    }
+    await this.ctx.storage.deleteAll()
+  }
+}
+
+type FacetHostStub = ReturnType<Env['FACET_HOST']['getByName']>
+
+class CounterStub extends RpcTarget {
+  #host: FacetHostStub
+  #name: string
+
+  constructor(host: FacetHostStub, name: string) {
+    super()
+    this.#host = host
+    this.#name = name
+  }
+
+  get() {
+    return this.#host.callCounter(this.#name, 'get', [])
+  }
+
+  increment(by: number) {
+    return this.#host.callCounter(this.#name, 'increment', [by])
+  }
+}
+
+export class CounterFacade extends WorkerEntrypoint<Env, SessionProps> {
+  getByName(name: string) {
+    return new CounterStub(this.env.FACET_HOST.getByName(this.ctx.props.sid), name)
+  }
+}
+
 export class RateLimitFacade extends WorkerEntrypoint<Env, SessionProps> {
   limit({ key }: { key: string }) {
     return this.env.DEMO_LIMITER.limit({ key: `${this.ctx.props.sid}:${key}` })

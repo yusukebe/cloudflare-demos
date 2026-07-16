@@ -143,7 +143,7 @@ right after deploy returned a transient 1104; fine afterwards.
    Vectorize namespaces = session isolation); service-bindings live via
    BackendFacade — dynamic worker entrypoints cannot be passed into another
    worker's env (DataCloneError), the parent must expose a forwarding
-   entrypoint. Remaining for v3: DO facets spike for durable-objects.
+   entrypoint. DO facets: DONE (2026-07-16) — durable-objects runs live; FacetHost supervisor DO (named by sid) runs the chapter Counter class as facets via ctx.facets.get + worker.getDurableObjectClass, one facet per counter name, alarm deletes facets. Worked first try, local and prod.
 3. (done 2026-07-16) rate-limit + images live (RateLimitFacade with
    session-scoped keys; ImagesFacade rebuilds the input/transform/output
    chain — buffer over RPC, rewrap as fixed-length stream). Try-it panel

@@ -89,12 +89,20 @@
         "name": "SESSION_DB",
         "class_name": "SessionDB",
       },
+      {
+        "name": "FACET_HOST",
+        "class_name": "FacetHost",
+      },
     ],
   },
   "migrations": [
     {
       "tag": "v1",
       "new_sqlite_classes": ["SessionDB"],
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["FacetHost"],
     },
   ],
 }

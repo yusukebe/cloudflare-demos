@@ -38,6 +38,7 @@ const RUNNABLE = {
   'service-bindings': 'gateway.ts',
   'rate-limit': 'index.ts',
   images: 'index.ts',
+  'durable-objects': 'index.ts',
 }
 const EXTRA_BUNDLE = { 'service-bindings': 'backend.ts' }
 
@@ -111,6 +112,11 @@ const EXAMPLES = {
     { label: 'greet', method: 'GET', path: '/greet/Yusuke' },
   ],
   'rate-limit': [{ label: 'GET / (send 6× fast → 429)', method: 'GET', path: '/' }],
+  'durable-objects': [
+    { label: 'increment demo', method: 'POST', path: '/counters/demo/increment' },
+    { label: 'get demo', method: 'GET', path: '/counters/demo' },
+    { label: 'get other (independent)', method: 'GET', path: '/counters/other' },
+  ],
   images: [
     { label: 'info of og.png', method: 'POST', path: '/info', bodyUrl: '/og.png' },
     {

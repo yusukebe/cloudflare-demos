@@ -7,7 +7,9 @@ import { chapters } from './generated/chapters'
 export {
   AIFacade,
   BackendFacade,
+  CounterFacade,
   D1Facade,
+  FacetHost,
   ImagesFacade,
   KVFacade,
   R2Facade,
@@ -311,6 +313,8 @@ const chapterEnv = (c: Context<AppEnv>, name: string, sid: string) => {
       return { RATE_LIMITER: exports.RateLimitFacade({ props: { sid } }) }
     case 'images':
       return { IMAGES: exports.ImagesFacade({}) }
+    case 'durable-objects':
+      return { COUNTER: exports.CounterFacade({ props: { sid } }) }
     default:
       return {}
   }
