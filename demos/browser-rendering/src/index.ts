@@ -16,4 +16,14 @@ app.get('/screenshot', async (c) => {
   }
 })
 
+app.get('/markdown', (c) => {
+  const url = c.req.query('url') ?? 'https://example.com'
+  return c.env.BROWSER.quickAction('markdown', { url })
+})
+
+app.get('/pdf', (c) => {
+  const url = c.req.query('url') ?? 'https://example.com'
+  return c.env.BROWSER.quickAction('pdf', { url })
+})
+
 export default app

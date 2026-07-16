@@ -120,6 +120,8 @@ const EXAMPLES = {
       path: '/screenshot?url=https://example.com',
     },
     { label: 'screenshot hono.dev', method: 'GET', path: '/screenshot?url=https://hono.dev' },
+    { label: 'markdown of hono.dev', method: 'GET', path: '/markdown?url=https://hono.dev' },
+    { label: 'PDF of example.com', method: 'GET', path: '/pdf?url=https://example.com' },
   ],
   'durable-objects': [
     { label: 'increment demo', method: 'POST', path: '/counters/demo/increment' },

@@ -144,6 +144,10 @@ export class BrowserFacade extends WorkerEntrypoint<Env> {
   fetch(request: Request) {
     return this.env.BROWSER.fetch(request)
   }
+
+  quickAction(action: 'screenshot' | 'markdown' | 'pdf', options: { url: string }) {
+    return this.env.BROWSER.quickAction(action as 'markdown', options)
+  }
 }
 
 const ALLOWED_MODELS = new Set(['@cf/meta/llama-3.2-3b-instruct', '@cf/baai/bge-base-en-v1.5'])

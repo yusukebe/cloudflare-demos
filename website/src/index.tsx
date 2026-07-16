@@ -235,6 +235,9 @@ app.get('/demos/:name', (c) => {
             <div id='status'></div>
             <pre id='out'>response will appear here</pre>
             <img id='outimg' alt='response' />
+            <a id='outlink' target='_blank' rel='noreferrer' style='display:none'>
+              open PDF
+            </a>
             <script
               dangerouslySetInnerHTML={{
                 __html: `
@@ -246,9 +249,11 @@ app.get('/demos/:name', (c) => {
                   const status = document.getElementById('status')
                   const out = document.getElementById('out')
                   const img = document.getElementById('outimg')
+                  const link = document.getElementById('outlink')
                   status.textContent = '...'
                   status.className = ''
                   img.style.display = 'none'
+                  link.style.display = 'none'
                   try {
                     const method = f.get('method')
                     const headers = {}
@@ -276,6 +281,11 @@ app.get('/demos/:name', (c) => {
                       const blob = await res.blob()
                       img.src = URL.createObjectURL(blob)
                       img.style.display = 'block'
+                      out.textContent = '(' + ct + ', ' + blob.size + ' bytes)'
+                    } else if (ct.startsWith('application/pdf')) {
+                      const blob = await res.blob()
+                      link.href = URL.createObjectURL(blob)
+                      link.style.display = 'inline-block'
                       out.textContent = '(' + ct + ', ' + blob.size + ' bytes)'
                     } else {
                       let text = await res.text()
