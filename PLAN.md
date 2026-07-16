@@ -32,7 +32,7 @@ cloudflare-demos/
 │   ├── rate-limit/        per-key Rate Limiting binding
 │   ├── workers-ai/        LLM inference (llama-3.2-3b-instruct, remote)
 │   ├── vectorize/         semantic search (bge-base-en-v1.5 + cf-demos-notes index, remote)
-│   ├── browser-rendering/ Puppeteer screenshot (remote)
+│   ├── browser-run/       Puppeteer + Quick Actions (remote)
 │   ├── images/            IMAGES binding info/resize
 │   ├── email/             send a simple email via Email Service
 │   └── flagship/          boolean feature flag evaluation

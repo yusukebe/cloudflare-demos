@@ -347,7 +347,7 @@ const chapterEnv = (c: Context<AppEnv>, name: string, sid: string) => {
       return { IMAGES: exports.ImagesFacade({}) }
     case 'durable-objects':
       return { COUNTER: exports.CounterFacade({ props: { sid } }) }
-    case 'browser-rendering':
+    case 'browser-run':
       return { BROWSER: exports.BrowserFacade({}) }
     default:
       return {}
@@ -355,7 +355,7 @@ const chapterEnv = (c: Context<AppEnv>, name: string, sid: string) => {
 }
 
 // Chapters that consume paid resources get the stricter limiter
-const AI_CHAPTERS = new Set(['workers-ai', 'vectorize', 'browser-rendering'])
+const AI_CHAPTERS = new Set(['workers-ai', 'vectorize', 'browser-run'])
 
 app.use('/run/*', async (c, next) => {
   let sid = getCookie(c, 'sid')

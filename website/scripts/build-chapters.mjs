@@ -22,7 +22,7 @@ const META = [
   ['rate-limit', 'Rate Limiting', 'Per-key limits on the edge'],
   ['workers-ai', 'Workers AI', 'LLM inference with one binding call'],
   ['vectorize', 'Vectorize', 'Semantic search with embeddings'],
-  ['browser-rendering', 'Browser Rendering', 'Headless Chromium screenshot'],
+  ['browser-run', 'Browser Run', 'Headless Chromium screenshot'],
   ['images', 'Images', 'Inspect / resize / convert images'],
   ['email', 'Email Service', 'Transactional send via send_email'],
   ['flagship', 'Flagship', 'Feature flag evaluation with context'],
@@ -39,7 +39,7 @@ const RUNNABLE = {
   'rate-limit': 'index.ts',
   images: 'index.ts',
   'durable-objects': 'index.ts',
-  'browser-rendering': 'index.ts',
+  'browser-run': 'index.ts',
 }
 const EXTRA_BUNDLE = { 'service-bindings': 'backend.ts' }
 
@@ -113,7 +113,7 @@ const EXAMPLES = {
     { label: 'greet', method: 'GET', path: '/greet/Yusuke' },
   ],
   'rate-limit': [{ label: 'GET / (send 6× fast → 429)', method: 'GET', path: '/' }],
-  'browser-rendering': [
+  'browser-run': [
     {
       label: 'screenshot example.com',
       method: 'GET',

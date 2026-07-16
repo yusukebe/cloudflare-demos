@@ -22,7 +22,7 @@ const CHAPTERS = [
   ['rate-limit', 'Rate Limiting', 'Per-key limits on the edge'],
   ['workers-ai', 'Workers AI', 'LLM inference with one binding call'],
   ['vectorize', 'Vectorize', 'Semantic search with embeddings'],
-  ['browser-rendering', 'Browser Rendering', 'Headless Chromium screenshot'],
+  ['browser-run', 'Browser Run', 'Headless Chromium screenshot'],
   ['images', 'Images', 'Inspect / resize / convert images'],
   ['email', 'Email Service', 'Transactional send via send_email'],
   ['flagship', 'Flagship', 'Feature flag evaluation with context'],

@@ -1,6 +1,6 @@
-# browser-rendering
+# browser-run
 
-Browser Rendering basics: drive a headless Chromium on Cloudflare with
+Browser Run basics: drive a headless Chromium on Cloudflare with
 Puppeteer, or use Quick Actions — one binding call for common tasks like
 screenshots, Markdown extraction, and PDFs.
 
@@ -18,7 +18,7 @@ pool on your account.
 ## Run
 
 ```sh
-pnpm -F browser-rendering dev
+pnpm -F browser-run dev
 ```
 
 ```sh
@@ -30,5 +30,5 @@ curl 'localhost:8787/pdf?url=https://example.com' -o page.pdf
 ## Deploy
 
 ```sh
-pnpm -F browser-rendering deploy
+pnpm -F browser-run deploy
 ```
