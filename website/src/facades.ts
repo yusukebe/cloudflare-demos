@@ -116,6 +116,7 @@ export class BackendFacade extends WorkerEntrypoint<Env, SessionProps> {
       `service-bindings-backend@${chapter.hash}@${this.ctx.props.sid}`,
       async () => ({
         compatibilityDate: '2026-07-01',
+        compatibilityFlags: ['nodejs_compat'],
         mainModule: 'index.js',
         modules: { 'index.js': chapter.backendBundle! },
         env: {},
@@ -134,6 +135,14 @@ export class BackendFacade extends WorkerEntrypoint<Env, SessionProps> {
 
   greet(name: string) {
     return this.#backend().greet(name)
+  }
+}
+
+// Puppeteer only talks to the binding via fetch (including the CDP
+// WebSocket), so a plain fetch passthrough is enough
+export class BrowserFacade extends WorkerEntrypoint<Env> {
+  fetch(request: Request) {
+    return this.env.BROWSER.fetch(request)
   }
 }
 
@@ -192,6 +201,7 @@ export class FacetHost extends DurableObject<Env> {
     const facet = this.ctx.facets.get(facetName, async () => {
       const worker = this.env.LOADER.get(`durable-objects-class@${chapter.hash}`, async () => ({
         compatibilityDate: '2026-07-01',
+        compatibilityFlags: ['nodejs_compat'],
         mainModule: 'index.js',
         modules: { 'index.js': chapter.bundle! },
         globalOutbound: null,

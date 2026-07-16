@@ -52,6 +52,10 @@
   "images": {
     "binding": "IMAGES",
   },
+  "browser": {
+    "binding": "BROWSER",
+    "remote": true,
+  },
   "ai": {
     "binding": "AI",
     "remote": true,

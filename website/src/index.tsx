@@ -7,6 +7,7 @@ import { chapters } from './generated/chapters'
 export {
   AIFacade,
   BackendFacade,
+  BrowserFacade,
   CounterFacade,
   D1Facade,
   FacetHost,
@@ -336,12 +337,15 @@ const chapterEnv = (c: Context<AppEnv>, name: string, sid: string) => {
       return { IMAGES: exports.ImagesFacade({}) }
     case 'durable-objects':
       return { COUNTER: exports.CounterFacade({ props: { sid } }) }
+    case 'browser-rendering':
+      return { BROWSER: exports.BrowserFacade({}) }
     default:
       return {}
   }
 }
 
-const AI_CHAPTERS = new Set(['workers-ai', 'vectorize'])
+// Chapters that consume paid resources get the stricter limiter
+const AI_CHAPTERS = new Set(['workers-ai', 'vectorize', 'browser-rendering'])
 
 app.use('/run/*', async (c, next) => {
   let sid = getCookie(c, 'sid')
@@ -379,6 +383,7 @@ async function run(c: Context<AppEnv>) {
   const sid = c.get('sid')
   const worker = c.env.LOADER.get(`${name}@${chapter.hash}@${sid}`, async () => ({
     compatibilityDate: '2026-07-01',
+    compatibilityFlags: ['nodejs_compat'],
     mainModule: 'index.js',
     modules: { 'index.js': chapter.bundle! },
     env: chapterEnv(c, name, sid),

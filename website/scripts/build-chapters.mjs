@@ -39,6 +39,7 @@ const RUNNABLE = {
   'rate-limit': 'index.ts',
   images: 'index.ts',
   'durable-objects': 'index.ts',
+  'browser-rendering': 'index.ts',
 }
 const EXTRA_BUNDLE = { 'service-bindings': 'backend.ts' }
 
@@ -112,6 +113,14 @@ const EXAMPLES = {
     { label: 'greet', method: 'GET', path: '/greet/Yusuke' },
   ],
   'rate-limit': [{ label: 'GET / (send 6× fast → 429)', method: 'GET', path: '/' }],
+  'browser-rendering': [
+    {
+      label: 'screenshot example.com',
+      method: 'GET',
+      path: '/screenshot?url=https://example.com',
+    },
+    { label: 'screenshot hono.dev', method: 'GET', path: '/screenshot?url=https://hono.dev' },
+  ],
   'durable-objects': [
     { label: 'increment demo', method: 'POST', path: '/counters/demo/increment' },
     { label: 'get demo', method: 'GET', path: '/counters/demo' },
@@ -174,7 +183,7 @@ async function bundleFile(file) {
     bundle: true,
     format: 'esm',
     write: false,
-    external: ['cloudflare:*'],
+    external: ['cloudflare:*', 'node:*'],
   })
   return result.outputFiles[0].text
 }
